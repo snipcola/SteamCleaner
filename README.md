@@ -1,6 +1,4 @@
 ## 🧹 Cleaner for Steam, written in Rust. 🦀
-#### 📥 Want to get in touch? I'm on discord, **@Vytrol**.
-#### ©️ This is a rust implementation of **@djsacred**'s batch file.
 ## 🎬 Showcase:
 ![showcase](./Showcase.png)
 ## 📋 Instructions:
