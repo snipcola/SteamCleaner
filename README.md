@@ -1,5 +1,5 @@
 ## 🧹 SteamCleaner
-![showcase](./Showcase.png)
+![showcase](./assets/showcase.png)
 ## 📋 Instructions:
 **Note**: To get the executable, either view the releases of this repository, or compile it yourself.
 1. Ensure that your steam client is **closed**.
