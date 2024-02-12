@@ -1,5 +1,4 @@
-## 🧹 Cleaner for Steam, written in Rust. 🦀
-## 🎬 Showcase:
+## 🧹 SteamCleaner
 ![showcase](./Showcase.png)
 ## 📋 Instructions:
 **Note**: To get the executable, either view the releases of this repository, or compile it yourself.
