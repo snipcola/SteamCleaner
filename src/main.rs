@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use dont_disappear::any_key_to_continue;
 use colored::{Colorize, control::set_virtual_terminal};
-use sysinfo::{System, SystemExt, ProcessExt};
+use sysinfo::System;
 use privilege::user;
 use winreg::{RegKey, enums};
 use std::{fs, io::ErrorKind, path::PathBuf};
@@ -43,7 +43,7 @@ fn pause() {
 }
 
 fn is_process_open() -> bool {
-    return (*SYSTEM).processes().iter().find(|(_, process)| process.name() == *PROCESS_EXECUTABLE).is_some();
+    return (*SYSTEM).processes().iter().find(|(_, process)| process.name().to_string_lossy() == *PROCESS_EXECUTABLE).is_some();
 }
 
 fn delete_reg(reg: &RegKey, path: &str) -> bool {

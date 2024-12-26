@@ -1,6 +1,6 @@
 [package]
 name = "steamcleaner"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Snipcola"]
 edition = "2021"
 
@@ -9,5 +9,5 @@ colored = "2.0.4"
 dont_disappear = "3.0.1"
 lazy_static = "1.4.0"
 privilege = "0.3.0"
-sysinfo = "0.29.10"
-winreg = "0.51.0"
+sysinfo = "0.33.0"
+winreg = "0.52.0"
