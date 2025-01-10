@@ -1,13 +1,13 @@
 [package]
 name = "steamcleaner"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Snipcola"]
 edition = "2021"
 
 [dependencies]
-colored = "2.0.4"
+colored = "3.0.0"
 dont_disappear = "3.0.1"
 lazy_static = "1.4.0"
 privilege = "0.3.0"
 sysinfo = "0.33.0"
-winreg = "0.52.0"
+winreg = "0.53.0"
