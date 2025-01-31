@@ -7,7 +7,7 @@ use winreg::{RegKey, enums::*};
 use std::{fs, io::ErrorKind, path::PathBuf, sync::Mutex};
 
 lazy_static! {
-    pub static ref SYSTEM: System = System::new_all();  
+    pub static ref SYSTEM: System = System::new_all();
     pub static ref PROCESS_EXECUTABLE: String = "steam.exe".to_string();
 
     pub static ref REGS: Vec<(Mutex<RegKey>, String, String)> = vec![
