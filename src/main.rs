@@ -3,26 +3,26 @@ use dont_disappear::any_key_to_continue;
 use colored::{Colorize, control::set_virtual_terminal};
 use sysinfo::System;
 use privilege::user;
-use winreg::{RegKey, enums};
-use std::{fs, io::ErrorKind, path::PathBuf};
+use winreg::{RegKey, enums::*};
+use std::{fs, io::ErrorKind, path::PathBuf, sync::Mutex};
 
 lazy_static! {
-    pub static ref SYSTEM: System = System::new_all();
+    pub static ref SYSTEM: System = System::new_all();  
     pub static ref PROCESS_EXECUTABLE: String = "steam.exe".to_string();
 
-    pub static ref REGS: Vec<(RegKey, String, String)> = vec![
-        (RegKey::predef(enums::HKEY_CURRENT_USER), "Software\\Valve".to_string(), "HKEY_CURRENT_USER".to_string()),
-        (RegKey::predef(enums::HKEY_CURRENT_USER), "Software\\Wow6432Node\\Valve".to_string(), "HKEY_CURRENT_USER".to_string()),
-        (RegKey::predef(enums::HKEY_CURRENT_USER), "Software\\Classes\\steam".to_string(), "HKEY_CURRENT_USER".to_string()),
-        (RegKey::predef(enums::HKEY_LOCAL_MACHINE), "Software\\Valve".to_string(), "HKEY_LOCAL_MACHINE".to_string()),
-        (RegKey::predef(enums::HKEY_LOCAL_MACHINE), "Software\\Wow6432Node\\Valve".to_string(), "HKEY_LOCAL_MACHINE".to_string()),
-        (RegKey::predef(enums::HKEY_LOCAL_MACHINE), "Software\\Classes\\steam".to_string(), "HKEY_LOCAL_MACHINE".to_string()),
-        (RegKey::predef(enums::HKEY_CLASSES_ROOT), "steam".to_string(), "HKEY_CLASSES_ROOT".to_string())
+    pub static ref REGS: Vec<(Mutex<RegKey>, String, String)> = vec![
+        (Mutex::new(RegKey::predef(HKEY_CURRENT_USER)), "Software\\Valve".to_string(), "HKEY_CURRENT_USER".to_string()),
+        (Mutex::new(RegKey::predef(HKEY_CURRENT_USER)), "Software\\Wow6432Node\\Valve".to_string(), "HKEY_CURRENT_USER".to_string()),
+        (Mutex::new(RegKey::predef(HKEY_CURRENT_USER)), "Software\\Classes\\steam".to_string(), "HKEY_CURRENT_USER".to_string()),
+        (Mutex::new(RegKey::predef(HKEY_LOCAL_MACHINE)), "Software\\Valve".to_string(), "HKEY_LOCAL_MACHINE".to_string()),
+        (Mutex::new(RegKey::predef(HKEY_LOCAL_MACHINE)), "Software\\Wow6432Node\\Valve".to_string(), "HKEY_LOCAL_MACHINE".to_string()),
+        (Mutex::new(RegKey::predef(HKEY_LOCAL_MACHINE)), "Software\\Classes\\steam".to_string(), "HKEY_LOCAL_MACHINE".to_string()),
+        (Mutex::new(RegKey::predef(HKEY_CLASSES_ROOT)), "steam".to_string(), "HKEY_CLASSES_ROOT".to_string())
     ];
 
-    pub static ref PROGRAM_REGS: Vec<(RegKey, String)> = vec![
-        (RegKey::predef(enums::HKEY_LOCAL_MACHINE), "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall".to_string()),
-        (RegKey::predef(enums::HKEY_LOCAL_MACHINE), "Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall".to_string())
+    pub static ref PROGRAM_REGS: Vec<(Mutex<RegKey>, String)> = vec![
+        (Mutex::new(RegKey::predef(HKEY_LOCAL_MACHINE)), "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall".to_string()),
+        (Mutex::new(RegKey::predef(HKEY_LOCAL_MACHINE)), "Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall".to_string())
     ];
 
     pub static ref DELETE_DIRS: Vec<String> = vec![
@@ -59,20 +59,22 @@ fn get_installed_programs() -> Vec<(String, String)> {
     let mut programs: Vec<(String, String)> = vec![];
 
     for (key, path) in PROGRAM_REGS.iter() {
-        let root_subkey = key.open_subkey(path);
+        if let Ok(key) = key.lock() {
+            let root_subkey = key.open_subkey(path);
 
-        if let Ok(root_subkey) = root_subkey {
-            for subkey in root_subkey.enum_keys() {
-                if let Ok(subkey) = subkey {
-                    let opened_subkey = root_subkey.open_subkey_with_flags(subkey, enums::KEY_READ);
-                    
-                    if let Ok(opened_subkey) = opened_subkey {
-                        let display_name = opened_subkey.get_value::<String, String>("DisplayName".to_string());
-                        let uninstall_string = opened_subkey.get_value::<String, String>("UninstallString".to_string());
+            if let Ok(root_subkey) = root_subkey {
+                for subkey in root_subkey.enum_keys() {
+                    if let Ok(subkey) = subkey {
+                        let opened_subkey = root_subkey.open_subkey_with_flags(subkey, KEY_READ);
+                        
+                        if let Ok(opened_subkey) = opened_subkey {
+                            let display_name = opened_subkey.get_value::<String, String>("DisplayName".to_string());
+                            let uninstall_string = opened_subkey.get_value::<String, String>("UninstallString".to_string());
 
-                        if let Ok(display_name) = display_name {
-                            if let Ok(uninstall_string) = uninstall_string {
-                                programs.push((display_name, uninstall_string));
+                            if let Ok(display_name) = display_name {
+                                if let Ok(uninstall_string) = uninstall_string {
+                                    programs.push((display_name, uninstall_string));
+                                }
                             }
                         }
                     }
@@ -140,13 +142,15 @@ fn main() {
     };
     
     for (key, path, key_string) in REGS.iter() {
-        match delete_reg(key, &path) {
-            true => {
-                println!("{} Deleted registry {}", "[ OKAY ]".bold().green(), format!("{}\\{}", &key_string, &path).bold());
-            },
-            false => {
-                println!("{} Failed to delete registry {}", "[ FAIL ]".bold().red(), format!("{}\\{}", &key_string, &path).bold());
-                return pause();
+        if let Ok(key) = key.lock() {
+            match delete_reg(&key, &path) {
+                true => {
+                    println!("{} Deleted registry {}", "[ OKAY ]".bold().green(), format!("{}\\{}", &key_string, &path).bold());
+                },
+                false => {
+                    println!("{} Failed to delete registry {}", "[ FAIL ]".bold().red(), format!("{}\\{}", &key_string, &path).bold());
+                    return pause();
+                }
             }
         }
     }
