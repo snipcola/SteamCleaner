@@ -4,7 +4,7 @@
 
 ## 📋 Instructions:
 
-**Note**: To get the executable, either view the [releases](https://git.snipcola.com/snipcola/SteamCleaner/releases) of this repository, or compile it yourself.
+**Note**: To get the executable, either view the [releases](https://code.snipcola.st/snipcola/SteamCleaner/releases) of this repository, or compile it yourself.
 
 1. Ensure that your steam client is **closed**.
 2. Run the executable **as administrator** and wait for it to complete.
